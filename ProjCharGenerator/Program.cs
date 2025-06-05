@@ -1,44 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace generator
 {
-    class CharGenerator 
-    {
-        private string syms = "абвгдеёжзийклмнопрстуфхцчшщьыъэюя"; 
-        private char[] data;
-        private int size;
-        private Random random = new Random();
-        public CharGenerator() 
-        {
-           size = syms.Length;
-           data = syms.ToCharArray(); 
-        }
-        public char getSym() 
-        {
-           return data[random.Next(0, size)]; 
-        }
-    }
     class Program
     {
         static void Main(string[] args)
         {
-            CharGenerator gen = new CharGenerator();
-            SortedDictionary<char, int> stat = new SortedDictionary<char, int>();
-            for(int i = 0; i < 1000; i++) 
+            GenerateText();
+            BigramAnalyzer.PlotBigramDistribution();
+        }
+
+        static void GenerateText()
+        {
+            string inputPath = "ProjCharGenerator/data/bigrams_input.txt";
+            string outputPath = "Results/gen-1.txt";
+
+            Dictionary<string, double> bigramProbs = new Dictionary<string, double>();
+            using (StreamReader sr = new StreamReader(inputPath, Encoding.UTF8))
             {
-               char ch = gen.getSym(); 
-               if (stat.ContainsKey(ch))
-                  stat[ch]++;
-               else
-                  stat.Add(ch, 1); Console.Write(ch);
+                string line;
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] parts = line.Trim().Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 3)
+                    {
+                        string bigram = parts[1];
+                        double freq = double.Parse(parts[2]);
+                        bigramProbs[bigram] = freq;
+                    }
+                }
             }
-            Console.Write('\n');
-            foreach (KeyValuePair<char, int> entry in stat) 
+
+            double total = bigramProbs.Values.Sum();
+            foreach (var k in bigramProbs.Keys.ToList())
             {
-                 Console.WriteLine("{0} - {1}",entry.Key,entry.Value/1000.0); 
+                bigramProbs[k] /= total;
             }
-            
+
+            Random rand = new Random();
+            StringBuilder text = new StringBuilder();
+            string currentBigram = bigramProbs.Keys.ElementAt(rand.Next(bigramProbs.Count));
+            text.Append(currentBigram);
+
+            while (text.Length < 1000)
+            {
+                string nextChar = currentBigram[1].ToString();
+                var possibleNext = bigramProbs.Keys.Where(k => k.StartsWith(nextChar)).ToList();
+                if (possibleNext.Count == 0) break;
+
+                double[] probs = possibleNext.Select(k => bigramProbs[k]).ToArray();
+                double sum = probs.Sum();
+                for (int i = 0; i < probs.Length; i++)
+                {
+                    probs[i] /= sum;
+                }
+
+                double r = rand.NextDouble();
+                double cumsum = 0;
+                int selected = 0;
+                for (int i = 0; i < probs.Length; i++)
+                {
+                    cumsum += probs[i];
+                    if (r <= cumsum)
+                    {
+                        selected = i;
+                        break;
+                    }
+                }
+
+                currentBigram = possibleNext[selected];
+                text.Append(currentBigram[1]);
+            }
+
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            File.WriteAllText(outputPath, text.ToString(), Encoding.UTF8);
         }
     }
 }
