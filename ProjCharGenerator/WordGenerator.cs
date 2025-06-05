@@ -1,4 +1,4 @@
-using System;
+ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,12 +9,12 @@ namespace generator
 {
     public class WordGenerator
     {
-        public static void GenerateText()
+        public static void GenerateText(string inputPath, string outputPath)
         {
             var wordFrequencies = new Dictionary<string, double>();
             var random = new Random();
 
-            using (var reader = new StreamReader("ProjCharGenerator/data/words_input.txt"))
+            using (var reader = new StreamReader(inputPath))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
@@ -29,6 +29,11 @@ namespace generator
                         }
                     }
                 }
+            }
+
+            if (wordFrequencies.Count == 0)
+            {
+                throw new InvalidOperationException("No valid words found in input file");
             }
 
             var totalFrequency = wordFrequencies.Values.Sum();
@@ -53,7 +58,15 @@ namespace generator
                 }
             }
 
-            File.WriteAllText("Results/gen-2.txt", string.Join(" ", words));
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            File.WriteAllText(outputPath, string.Join(" ", words));
+        }
+
+        public static void GenerateText()
+        {
+            string inputPath = "ProjCharGenerator/data/words_input.txt";
+            string outputPath = "Results/gen-2.txt";
+            GenerateText(inputPath, outputPath);
         }
 
         public static void PlotWordDistribution()
@@ -160,4 +173,4 @@ namespace generator
             }
         }
     }
-} 
+}
