@@ -12,6 +12,8 @@ namespace generator
         {
             GenerateText();
             BigramAnalyzer.PlotBigramDistribution();
+            WordGenerator.GenerateText();
+            WordGenerator.PlotWordDistribution();
         }
 
         static void GenerateText()

@@ -6,5 +6,3 @@ obj/
 *.log
 *.tmp
 .vs/
-Results/*.txt
-Results/*.png 
