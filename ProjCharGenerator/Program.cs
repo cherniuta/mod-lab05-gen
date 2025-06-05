@@ -6,7 +6,7 @@ using System.Text;
 
 namespace generator
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
@@ -16,11 +16,8 @@ namespace generator
             WordGenerator.PlotWordDistribution();
         }
 
-        static void GenerateText()
+        public static void GenerateText(string inputPath, string outputPath)
         {
-            string inputPath = "ProjCharGenerator/data/bigrams_input.txt";
-            string outputPath = "Results/gen-1.txt";
-
             Dictionary<string, double> bigramProbs = new Dictionary<string, double>();
             using (StreamReader sr = new StreamReader(inputPath, Encoding.UTF8))
             {
@@ -80,6 +77,13 @@ namespace generator
 
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
             File.WriteAllText(outputPath, text.ToString(), Encoding.UTF8);
+        }
+
+        public static void GenerateText()
+        {
+            string inputPath = "ProjCharGenerator/data/bigrams_input.txt";
+            string outputPath = "Results/gen-1.txt";
+            GenerateText(inputPath, outputPath);
         }
     }
 }
